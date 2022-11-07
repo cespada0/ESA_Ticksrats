@@ -13,8 +13,10 @@ library(questionr)  # for odds.ratios
 library(sjPlot)     # for plotting results of log.regr.
 library(sjmisc)     # for plotting results of log.regr.
 library(effects)    # for probability output and plots
+library(sjlabelled)
+library(dplyr) 
 
-install.packages("car", "broom", "questioner", "sjPlot", "sjmisc", "effects")
+
 ####CODE####
 oct31 <- read_excel("Desktop/oct31.xlsx", 
                     sheet = "Sheet3")
@@ -100,29 +102,8 @@ exp(cbind(coef(model), confint(model)))
 Tissues$mammal <- as.factor(Tissues$mammal)
 Tissues$mammal <- relevel(Tissues$mammal, ref = "Cotton Rat")
 
-model <<- Tissues %>%
-  glm(formula = rp ~ tick_density + mammal, 
-      family = "binomial")
 
-summary(model)
-exp(cbind(coef(model), confint(model)))
-plot_model(model, transform = NULL, show.values = T, show.p = T, value.offset = 0.4)
 
-model <<- Tissues %>%
-  glm(formula = rp ~ mammal, 
-      family = "binomial")
-
-summary(model)
-exp(cbind(coef(model), confint(model)))
-plot_model(model, transform = NULL, show.values = T, show.p = T, value.offset = 0.4)
-
-model <<- Tissues %>%
-  glm(formula = rp ~ site, 
-      family = "binomial")
-
-summary(model)
-exp(cbind(coef(model), confint(model)))
-plot_model(model, transform = NULL, show.values = T, show.p = T, value.offset = 0.4)
 
 
 ##graphs
@@ -132,16 +113,67 @@ df <- data.frame(oct31)
 
 
 ggplot(df, aes(AdultGCT, RodentPrev, color = Site)) + geom_point() +
-  geom_smooth(method = lm, se = FALSE)
+  geom_smooth(method = lm, se = FALSE) +
+ 
 
 ggplot(df, aes(AdultGCT, RodentPrev)) + geom_point() +
   geom_smooth(method = lm, se = FALSE)
 
-
+##final graphs
 ggplot(df, aes(TickDensity, RodentPrev, color = Site)) + geom_point() +
-  geom_smooth(method = lm, se = FALSE)
+  geom_smooth(method = lm, se = FALSE) +
+  scale_colour_discrete(labels = c ("CH3", "HM1", "NC1", "TP1")) +
+  xlab("Adult Gulf Coast Tick Density") + ylab("Rodent prevalence") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+       panel.background = element_blank(), axis.line = element_line(colour = "black"))
+                    
 
 ggplot(df, aes(TickDensity, RodentPrev)) + geom_point() +
-  geom_smooth(method = lm, se = FALSE)
+  geom_smooth(method = lm, se = FALSE)+
+  xlab("Adult Gulf Coast Tick Density") + ylab("Rodent prevalence") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"))
 
+
+model <<- Tissues %>%
+  glm(formula = rp ~ site, 
+      family = "binomial")
+
+summary(model)
+exp(cbind(coef(model), confint(model)))
+plot_model(model, transform= "exp", show.values = T, show.p = T, value.offset = 0.4, 
+           axis.title = "Odds Ratio", vline.color = "red", title = "", 
+           axis.labels =  c("TP1", "NC1", "HM1")) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"))
+
+
+model <<- Tissues %>%
+  glm(formula = rp ~ tick_density + mammal, 
+      family = "binomial")
+
+summary(model)
+exp(cbind(coef(model), confint(model)))
+plot_model(model, transform = "exp", show.values = F, show.p = T, value.offset = 0.4,
+           axis.title = "Odds Ratio", vline.color = "red", title = "", 
+           axis.labels =  c("White-footed mouse", "Meadow vole", "House mouse", 
+                            "Eastern harvest mouse", "Marsh Rice Rat", "Tick Density")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) 
+
+model <<- Tissues %>%
+  glm(formula = rp ~ mammal, 
+      family = "binomial")
+
+summary(model)
+exp(cbind(coef(model), confint(model)))
+plot_model(model, transform = "exp", show.values = T, show.p = T, value.offset = 0.4,
+           axis.title = "Odds Ratio", vline.color = "red", title = "", 
+           axis.labels =  c("White-footed mouse", "Meadow vole", "House mouse", 
+                            "Eastern harvest mouse", "Marsh Rice Rat")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) 
+
+
+##makes odds ratio line at 0
 plot_model(model, transform = NULL, show.values = T, show.p = T, value.offset = 0.4)
